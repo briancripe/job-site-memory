@@ -1,0 +1,40 @@
+{
+  "dryRun": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"status\":\"not_implemented\",\"_stub\":\"commit is not implemented yet — built during the hackathon\",\"skipped\":true,\"would_have_written\":{\"object_id\":\"probe-object-alpha\",\"title\":\"Bench pressure check\",\"intent\":\"Check valve operation\",\"claims\":[{\"text\":\"Lever moved freely\",\"confidence\":0.8}],\"next_question\":\"Does this valve seal under pressure?\"}}"
+      }
+    ],
+    "isError": false,
+    "structuredContent": {
+      "status": "not_implemented",
+      "_stub": "commit is not implemented yet — built during the hackathon",
+      "skipped": true,
+      "would_have_written": {
+        "object_id": "probe-object-alpha",
+        "title": "Bench pressure check",
+        "intent": "Check valve operation",
+        "claims": [{ "text": "Lever moved freely", "confidence": 0.8 }],
+        "next_question": "Does this valve seal under pressure?"
+      }
+    }
+  },
+  "save": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"status\":\"not_implemented\",\"_stub\":\"commit is not implemented yet — built during the hackathon\",\"lesson_id\":null,\"object_id\":\"probe-object-alpha\",\"claims_persisted\":0,\"cursor_active\":false}"
+      }
+    ],
+    "isError": false,
+    "structuredContent": {
+      "status": "not_implemented",
+      "_stub": "commit is not implemented yet — built during the hackathon",
+      "lesson_id": null,
+      "object_id": "probe-object-alpha",
+      "claims_persisted": 0,
+      "cursor_active": false
+    }
+  }
+}
