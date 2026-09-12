@@ -3,14 +3,12 @@ import {
   CopilotRuntime,
   createCopilotHonoHandler,
 } from "@copilotkit/runtime/v2";
-import { makeAgent } from "agent-core";
-import { MOBILE_FINANCE_PROMPT } from "agent-core/mobile-finance-prompt";
+import { JOB_SITE_BRIDGE_PROMPT, makeAgent } from "agent-core";
 
 const runtime = new CopilotRuntime({
   agents: () => ({
     default: makeAgent(randomUUID(), {
-      workplace: false,
-      prompt: MOBILE_FINANCE_PROMPT,
+      prompt: JOB_SITE_BRIDGE_PROMPT,
     }),
   }),
 });

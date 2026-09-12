@@ -21,14 +21,14 @@ import {
   CopilotRuntime,
   createCopilotHonoHandler,
 } from "@copilotkit/runtime/v2";
-import { LOCI_DEMO_PROMPT, makeAgent } from "agent-core";
+import { JOB_SITE_BRIDGE_PROMPT, makeAgent } from "agent-core";
 
-// Web writes use /api/followups after a browser approval. Never expose raw MCP writes here.
+// The job-site bridge receives both configured MCP servers. The existing
+// /api/followups browser-approval flow remains available and unchanged.
 const runtime = new CopilotRuntime({
   agents: () => ({
     default: makeAgent(randomUUID(), {
-      workplace: false,
-      prompt: LOCI_DEMO_PROMPT,
+      prompt: JOB_SITE_BRIDGE_PROMPT,
     }),
   }),
 });
