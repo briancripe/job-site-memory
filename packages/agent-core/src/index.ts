@@ -4,7 +4,7 @@
  * Client code wants `agent-core/shared`.
  */
 export { makeAgent } from "./agent";
-export { LOCI_DEMO_PROMPT } from "./prompt";
+export { JOB_SITE_BRIDGE_PROMPT, LOCI_DEMO_PROMPT } from "./prompt";
 export { MOBILE_FINANCE_PROMPT } from "./mobile-finance-prompt";
 export { resolveModel } from "./model";
 export { searchWeb, isSearchConfigured } from "./capabilities/search";
