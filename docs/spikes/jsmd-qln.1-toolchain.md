@@ -42,6 +42,10 @@ filesystem using pnpm's normal `node_modules/.pnpm` layout.
   the request to complete.
 - No capability token, external service credential, graduation-home behavior,
   license flow, or other product functionality was added.
+- The `just` recipes self-provision a frozen install when `node_modules` is
+  absent. In inode-constrained Beadhive worktrees that store lives beside the
+  common Git directory rather than on `/tmp`; already-installed checkouts skip
+  the install step.
 
 ## Verdict
 
