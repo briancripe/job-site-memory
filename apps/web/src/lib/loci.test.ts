@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { toDispatchView, type AskResult } from "./loci";
 
@@ -48,4 +49,14 @@ test("confirm band keeps both twins; no_match and the live stub never look like 
 
   assert.equal(toDispatchView({ status: "no_match", prompt_to_user: "I have no record of this." }, now).band, "no_match");
   assert.equal(toDispatchView({ status: "not_implemented", _stub: "ask is not implemented yet" }, now).band, "not_live");
+});
+
+test("captured G3 ask probes remain visibly not live", () => {
+  const fixture = JSON.parse(
+    readFileSync(new URL("./fixtures/g3-ask.json", import.meta.url), "utf8"),
+  ) as Record<string, { structuredContent: AskResult }>;
+
+  for (const call of Object.values(fixture)) {
+    assert.equal(toDispatchView(call.structuredContent, now).band, "not_live");
+  }
 });

@@ -1,0 +1,56 @@
+{
+  "alpha": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"status\":\"not_implemented\",\"_stub\":\"observe is not implemented yet — built during the hackathon\",\"needs_place\":false,\"prompt_to_user\":null,\"object_id\":null,\"place_id\":null,\"created\":false,\"echo\":{\"place_label\":\"bench test\",\"canonical_class\":\"valve\",\"material\":\"metal_brass_or_bronze\",\"mounting\":\"handheld_portable\",\"visible_verbatim_text\":\"600 WOG\",\"visible_tag_code\":\"\",\"user_label\":\"bench valve alpha\"}}"
+      }
+    ],
+    "isError": false,
+    "structuredContent": {
+      "status": "not_implemented",
+      "_stub": "observe is not implemented yet — built during the hackathon",
+      "needs_place": false,
+      "prompt_to_user": null,
+      "object_id": null,
+      "place_id": null,
+      "created": false,
+      "echo": {
+        "place_label": "bench test",
+        "canonical_class": "valve",
+        "material": "metal_brass_or_bronze",
+        "mounting": "handheld_portable",
+        "visible_verbatim_text": "600 WOG",
+        "visible_tag_code": "",
+        "user_label": "bench valve alpha"
+      }
+    }
+  },
+  "beta": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"status\":\"not_implemented\",\"_stub\":\"observe is not implemented yet — built during the hackathon\",\"needs_place\":false,\"prompt_to_user\":null,\"object_id\":null,\"place_id\":null,\"created\":false,\"echo\":{\"place_label\":\"bench test\",\"canonical_class\":\"valve\",\"material\":\"metal_brass_or_bronze\",\"mounting\":\"handheld_portable\",\"visible_verbatim_text\":\"600 WOG\",\"visible_tag_code\":\"\",\"user_label\":\"bench valve beta\"}}"
+      }
+    ],
+    "isError": false,
+    "structuredContent": {
+      "status": "not_implemented",
+      "_stub": "observe is not implemented yet — built during the hackathon",
+      "needs_place": false,
+      "prompt_to_user": null,
+      "object_id": null,
+      "place_id": null,
+      "created": false,
+      "echo": {
+        "place_label": "bench test",
+        "canonical_class": "valve",
+        "material": "metal_brass_or_bronze",
+        "mounting": "handheld_portable",
+        "visible_verbatim_text": "600 WOG",
+        "visible_tag_code": "",
+        "user_label": "bench valve beta"
+      }
+    }
+  }
+}
