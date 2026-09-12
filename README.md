@@ -1,44 +1,145 @@
-> **job-site-memory** — the dispatch console for [0xL0C1](https://github.com/LincForge/0xl0c1):
-> a CopilotKit web app that talks to the 0xL0C1 MCP endpoint (`observe` / `ask` / `commit`) and draws
-> the confirm band, the dry-run write gate, and the graph for the shop dispatcher.
-> Design: [docs/DESIGN.md](docs/DESIGN.md) · Spikes: [docs/spikes/](docs/spikes/README.md)
->
-> **Provenance.** Everything below this note is the CopilotKit
-> [agents-everywhere-starter-kit](https://github.com/CopilotKit/agents-everywhere-starter-kit) at
-> `5c8bf4c` (MIT), with commands moved to pnpm + Turborepo. New in this repo: `docs/`,
-> `packages/agent-core/src/capabilities/loci.ts`, `apps/web/src/lib/loci.ts` (+ test), `turbo.json`,
-> `pnpm-workspace.yaml`, `.npmrc`.
->
-> ```bash
-> pnpm install && cp .env.example .env   # set a model key and LOCI_MCP_URL (never commit it)
-> pnpm verify && pnpm dev:web            # http://127.0.0.1:3100
-> ```
+# Job Site Memory
 
-<div align="center">
+Job Site Memory is a dispatcher console for [0xL0C1](https://github.com/LincForge/0xl0c1). It lets one technician record a physical object and leave a lesson, then lets a later technician recover that handoff using the object's visible tag and location.
 
-# Agents, Everywhere Hackathon Starter Kit
+The demo is intentionally concrete:
 
-![Agents, Everywhere hackathon — OpenAI, CopilotKit, OpenRouter, Exa, Auth0, and Ambiguous AI](assets/banner.png)
+1. **Observe on site** appends an object event.
+2. **Leave a handoff** appends a lesson, claim, and open question to that object.
+3. **Return visit** asks by tag and place and rebuilds the memory from persisted events.
 
-**Build an agent that belongs where people already work, talk, and live.**
+The dispatcher uses CopilotKit for conversational access, 0xL0C1 for the `observe` / `commit` / `ask` memory contract, and an Ambiguous AI Sheet as the append-only event ledger.
 
-[Overview](#overview) · [Get started](#get-started) · [Templates](#templates) · [Coding agent](#coding-agent) · [Resources](#resources)
+## Run the demo locally
 
-</div>
+### Prerequisites
 
-## Overview
+- Node.js 22+
+- pnpm 9.12+
+- [just](https://github.com/casey/just)
+- A model-provider key for chat (OpenRouter or OpenAI)
+- An Ambiguous API key and restricted Sheet configured for 0xL0C1
+- For the complete local stack: a functional 0xL0C1 checkout with `uv` available
 
-Build for **[Agents, Everywhere: Bots, Channels, & More](https://aitinkerers.org/hackathons/global/agents-everywhere)**, the AI Tinkerers global hackathon on **September 12–13, 2026**. Choose your city on the event page for its local schedule. Put an agent inside a conversation, an app, a phone, or a physical environment. Make the context of that place essential to what it can do.
+Install the JavaScript workspace:
 
-This kit gives you three runnable templates, files to hand to your coding agent, and sponsor setup notes. Pick a user, a problem, and one complete interaction. You can use any stack; you do not need every sponsor or every surface.
+```bash
+just install
+```
 
-Your project and its core functionality must be created during the event. Existing libraries, templates, and starter code are allowed; describe what you reuse and what you build. Read [the rules](hackathon-rules.md), then follow your city's participant portal for the current deadline and judging criteria.
+Create `.env` for credentials:
 
-## Get started
+```dotenv
+MODEL_PROVIDER=openrouter
+OPENROUTER_API_KEY=replace-me
+MODEL=openai/gpt-5.6-sol
+AMBIGUOUS_API_KEY=replace-me
+```
 
-### Onboarding Prompt
+Create `.env.local` for machine-specific demo settings:
 
-For web, paste this into your coding agent:
+```dotenv
+DEMO_HOST=127.0.0.1
+LOCI_SERVER_DIR=/absolute/path/to/0xl0c1
+LOCI_MCP_URL=http://127.0.0.1:8130/loci-localdemo/mcp
+LOCI_AMBIGUOUS_SHEET_ID=replace-me
+LOCI_AMBIGUOUS_RANGE=Events!A1:M1
+LOCI_AMBIGUOUS_TAB=Events
+```
+
+Both files are ignored by Git. `LOCI_SERVER_DIR` must point to the checkout containing the functional Ambiguous event store, not an older stub revision.
+
+Start the complete local stack:
+
+```bash
+just demo
+```
+
+This keeps Next.js and 0xL0C1 attached to one terminal. Open <http://127.0.0.1:3100>; Ctrl-C stops both processes.
+
+If 0xL0C1 is already running or deployed, set `LOCI_MCP_URL` to that endpoint and run only the dispatcher:
+
+```bash
+just demo-web
+```
+
+Verify the running stack from another terminal:
+
+```bash
+just demo-check
+```
+
+The check covers the page, CopilotKit runtime, browser-to-LOCI bridge, and MCP health endpoint.
+
+### Tailscale access
+
+Use this machine's Tailscale IPv4 address for both `DEMO_HOST` and the local MCP URL:
+
+```dotenv
+DEMO_HOST=100.x.y.z
+LOCI_MCP_URL=http://100.x.y.z:8130/loci-localdemo/mcp
+```
+
+Then run `just demo`. The dispatcher is available to permitted tailnet peers at `http://100.x.y.z:3100`. The approval-session handler trusts the explicit `DEMO_HOST` in addition to loopback.
+
+## Rehearse the judge flow
+
+Open the dispatcher and keep the 0xL0C1 ledger in a second window using **Open ledger**.
+
+1. Note the generated tag and click **Record object**. The object count increases and a provider-backed object ID appears.
+2. Click **Save handoff**. The lesson and claim counts increase.
+3. Click **Recall from Ambiguous**. The dispatcher sends only tag, place, and description—not the browser's object ID—and renders the returned object, lesson, claim, and open question.
+4. Refresh the dispatcher and use the same tag to explain the return-visit story. The memory is reconstructed from Ambiguous rather than browser storage.
+5. Use chat to show the same contract conversationally. For example: “I am in the upstairs bathroom looking at tag JS-123ABC. What did the previous technician learn?”
+
+The deterministic controls are the dependable demonstration path. Chat uses the same MCP tools but lets the model decide which tool to call.
+
+## How the dispatcher is built
+
+```text
+Browser controls ──POST /api/loci──────────────┐
+                                                │ MCP
+CopilotKit chat ──POST /api/copilotkit─────────┼──► 0xL0C1
+                                                │      │
+Ledger counters ──GET /api/loci ──GET state────┘      │ append/read
+                                                       ▼
+                                                Ambiguous Sheet
+```
+
+| Area | Implementation |
+|---|---|
+| Three-step dispatcher UI | [`apps/web/src/components/loci-demo.tsx`](apps/web/src/components/loci-demo.tsx) |
+| Same-origin browser API | [`apps/web/src/app/api/loci/route.ts`](apps/web/src/app/api/loci/route.ts) |
+| MCP client and state proxy | [`apps/web/src/lib/server/loci-client.ts`](apps/web/src/lib/server/loci-client.ts) |
+| CopilotKit runtime | [`apps/web/src/app/api/copilotkit/[[...path]]/route.ts`](apps/web/src/app/api/copilotkit/[[...path]]/route.ts) |
+| Field-handoff agent prompt | [`packages/agent-core/src/prompt.ts`](packages/agent-core/src/prompt.ts) |
+| MCP capability configuration | [`packages/agent-core/src/capabilities/loci.ts`](packages/agent-core/src/capabilities/loci.ts) |
+| Local operator commands | [`justfile`](justfile) |
+
+The browser never calls the MCP endpoint directly. The Next.js route speaks MCP server-side, normalizes tool results, and proxies the read-only graph state. Images are not sent to 0xL0C1; a camera-capable host must turn what it sees into text before calling the tools.
+
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `just install` | Install the pinned pnpm workspace |
+| `just demo` | Run local 0xL0C1 and the dispatcher together |
+| `just demo-loci` | Run only local 0xL0C1 |
+| `just demo-web` | Run only the dispatcher against `LOCI_MCP_URL` |
+| `just demo-check` | Check all live demo endpoints |
+| `just check` | Run TypeScript checks and offline tests |
+| `just test` | Run offline tests |
+| `just build` | Build the workspace |
+
+## Current scope
+
+The web dispatcher is the hackathon product. The inherited Slack channel, React Native finance sample, incident components, and workplace follow-up implementation remain in the repository as starter-kit reference code; they are not part of the primary Job Site Memory demo.
+
+Historical feasibility work is retained under [`docs/spikes/`](docs/spikes/README.md). Those documents record what was true when 0xL0C1 still returned stubs and should not be read as current runtime status. The current architecture is in [`docs/DESIGN.md`](docs/DESIGN.md).
+
+## Onboarding Prompt
+
+For web onboarding, use the official prompt as written:
 
 ```text
 Help me get started with CopilotKit. Run this command and follow the instructions:
@@ -46,81 +147,17 @@ Help me get started with CopilotKit. Run this command and follow the instruction
 npx --yes copilotkit@latest onboard start
 ```
 
-For Slack, follow [Channels setup](apps/channel/README.md#get-started). For React Native, follow the [Expo setup instructions](apps/mobile/README.md#get-started).
+Channels and mobile setup remain documented in [`apps/channel/README.md`](apps/channel/README.md) and [`apps/mobile/README.md`](apps/mobile/README.md), respectively.
 
-## Templates
+## Verification and provenance
 
-These starting points serve different kinds of context. **CopilotKit Channels** brings the Slack agent into the conversation; **CopilotKit React** connects the web agent to the app people are using; **CopilotKit React Native** brings the same agent pattern onto a phone.
+Before publishing a change, run:
 
-### 1. Slack — an agent that joins the thread
+```bash
+just check
+just build
+```
 
-**OpenAI + CopilotKit Channels + Exa**
+Live provider verification is separate: run `just demo-check`, then complete observe → handoff → recall with a disposable tag.
 
-An agent reads what people already said, researches with Exa, and answers in the same thread with native cards and source links. Start with a support conversation, a research discussion, or a team decision.
-
-The included Slack app supplies thread history, subscriptions, search, and Channels UI. Configure your model, Exa, and a managed Channel, then run `pnpm dev:slack`. No public tunnel is needed. Teams or other chat platforms can use the same Channels pattern, but this starter ships the Slack app.
-
-**[Use the Slack template →](apps/channel/)**
-
-### 2. Web — an agent inside your app
-
-**OpenAI + CopilotKit React + Ambiguous AI**
-
-An agent sees the page you are on and turns a request into a real workplace record you can still find after a refresh. Adapt it to customer follow-ups, a project workspace, or a personal planning app.
-
-The included web app supplies page context, frontend tools, agent-rendered UI, and a browser approval step. Connect an Ambiguous AI workspace, then run `pnpm dev:web`; approved follow-ups are saved through the server and can be read back after refresh.
-
-**[Use the web template →](apps/web/)**
-
-### 3. React Native — an agent in your pocket
-
-**OpenAI or OpenRouter + CopilotKit React Native**
-
-A mobile agent reads app state, renders native cards, and waits for a tap before changing local sample data. Start with a personal finance assistant, a field checklist, an inventory counter, or any workflow where phone context and approval matter.
-
-The included Expo app supplies seeded finance state, native rendered tool UI, a human-in-the-loop expense approval, and a mobile-specific CopilotKit runtime endpoint served by the web app. Configure your model provider, start `pnpm dev:web`, then run the mobile app from `apps/mobile`.
-
-**[Use the React Native template →](apps/mobile/)**
-
-### Make the demo yours
-
-The supplied on-call and finance assistants are **infrastructure examples**: read ambient context, call a tool, render useful UI, and return a verifiable result. Choose a different user, problem, dataset, and interaction; the goal is your own project, not another version of the starter scenario.
-
-Use the [demo prompts](dev-docs/demo-prompts.md) to learn how the pieces connect, then replace the sample domain. In the Slack sample incident flow, approval cards record decisions without executing production actions. In the web follow-up flow, the page approval button saves the reviewed Ambiguous task. In the mobile finance flow, approval changes local in-memory sample data. Enforce the same kind of write boundary around any external action you add.
-
-Want another surface pattern? The web app also includes a voice route, and the shared agent can connect to remote MCP tools when configured. The event surfaces are inspiration, not separate tracks or a requirement to build multiple apps.
-
-## Coding agent
-
-Give your agent these files before it starts coding:
-
-| File | What it provides |
-|---|---|
-| [hackathon-overview.md](hackathon-overview.md) | The challenge, four surfaces, and official judging criteria |
-| [hackathon-rules.md](hackathon-rules.md) | Build eligibility, inherited code, and required deliverables |
-| [using-sponsor-tools.md](using-sponsor-tools.md) | Every sponsor featured in this kit: access, authentication, configuration, and a first working call |
-| [AGENTS.md](AGENTS.md) | Repository conventions and verification commands |
-| [Channels skill](.agents/skills/build-channels-agent/SKILL.md) | Verified Channels APIs for the Slack template |
-
-The app READMEs provide launch commands, files to customize, and a concrete result to check. Start with one template and add a second surface only if it helps your user.
-
-## Resources
-
-| Need | Go here |
-|---|---|
-| Event details, deadline, and judging | [Find your city](https://aitinkerers.org/hackathons/global/agents-everywhere), then open its participant portal and handbook |
-| OpenAI agent development | [Agents SDK quickstart](https://openai.github.io/openai-agents-js/guides/quickstart/) |
-| OpenRouter access and model choice | [Quickstart](https://openrouter.ai/docs/quickstart) · [Keys](https://openrouter.ai/keys) · [Model catalog](https://openrouter.ai/models) · [Model switching](dev-docs/model-switching.md) |
-| CopilotKit app development | [Docs](https://docs.copilotkit.ai/) · [Tools and context](dev-docs/tools-and-context.md) · [Discord channel for technical questions](https://discord.com/channels/1122926057641742418/1548038338848489532) |
-| CopilotKit Channels | [Channels guide](https://copilotkit.ai/channels-guide.md) · [Screenshot walkthrough](dev-docs/channels-sdk-walkthrough/README.md) · [OpenTag example app](https://github.com/CopilotKit/OpenTag) |
-| Exa quickstart | [Search API guide](https://exa.ai/docs/reference/search-api-guide) · [Kit setup](using-sponsor-tools.md#exa) |
-| Auth0 API authorization | [Node API](https://auth0.com/docs/quickstart/backend/nodejs) · [Kit setup](using-sponsor-tools.md#auth0) |
-| Ambiguous AI quickstart | [Developer guide](https://www.ambiguous.ai/llms.txt) · [Kit setup](using-sponsor-tools.md#ambiguous-ai) |
-| Rehearse and debug | [Demo prompts](dev-docs/demo-prompts.md) · [Troubleshooting](dev-docs/troubleshooting.md) |
-| Prepare your entry | [Submission checklist](SUBMISSION.md) |
-
-For credit redemption instructions, choose your city on the [global event page](https://aitinkerers.org/hackathons/global/agents-everywhere) and check its participant portal's **Credits & Offers** section.
-
-For technical questions during the event, check your city's participant portal and ask your local organizers.
-
-For the Slack/web workspaces, `pnpm verify` runs typechecks and offline tests without credentials. The mobile app has its own install, tests, typecheck, and Metro export checks under `apps/mobile`. Each app reports missing configuration when the relevant integration is used. Live sponsor calls and platform delivery require your accounts. See [developer docs](dev-docs/README.md) for detailed setup and deployment.
+This repository began from CopilotKit's MIT-licensed `agents-everywhere-starter-kit` at commit `5c8bf4c`. The Job Site Memory workflow, LOCI bridge, field prompt, dispatcher interface, local recipes, and Ambiguous-backed round-trip were built during the hackathon. See [`SUBMISSION.md`](SUBMISSION.md) for the submission narrative and [`hackathon-rules.md`](hackathon-rules.md) for event rules.

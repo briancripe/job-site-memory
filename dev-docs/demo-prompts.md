@@ -1,75 +1,53 @@
-# A complete incident demo
+# Job Site Memory demo script
 
-The point is to show work informed by its surroundings and a result visible where the interaction began. Choose either the Slack workflow or the browser workflow, then add only the sponsor capabilities you need.
+The deterministic dispatcher controls are the primary demo. CopilotKit chat is a second route through the same 0xL0C1 tools.
 
-These are reference interactions to learn from. Build your own project and its core functionality during the event, and distinguish that work from inherited starter code. See [build eligibility](../SUBMISSION.md#build-eligibility).
-
-## Slack: context, sources, card, follow-up
-
-Prerequisites: [Slack setup](setup.md), your selected model provider, Exa for research, and an isolated Ambiguous AI demo workspace for the external-task step. [using-sponsor-tools.md](../using-sponsor-tools.md) give the exact configuration.
-
-### 1. Establish the surrounding context
-
-Before mentioning the bot, put these messages into a thread:
-
-> checkout is timing out for EU customers
->
-> started around 02:14, right after the web deploy
->
-> rolled web back, did not help — still seeing 4s+ on /checkout
->
-> queue depth on payments-worker is climbing
-
-Then ask:
-
-> @agent catch me up on this incident. Read this thread and show an incident card.
-
-Expected: `read_thread` followed by `incident_card`. Check that it includes the failed rollback and growing queue, without your prompt restating them. Ask for a timeline to exercise `timeline`.
-
-### 2. Research with visible sources
-
-> @agent use web search to find documented causes of payment-worker retry storms and safe investigation steps. Include source links and separate published guidance from what this thread proves.
-
-Expected: `search_web` via Exa and inspectable URLs. Search results do not prove the cause of this sample incident. No log reader is included.
-
-### 3. Approve a concrete follow-up
-
-> @agent propose creating one task in our Ambiguous workspace: “Investigate payments-worker retry spike.” Include the failed rollback, rising queue depth, and useful source links. Ask for approval before creating it; do not send mail or change production.
-
-Review the proposed action and approve only the intended demo-workspace write. The managed proposal card records the decision but executes nothing and does not resume the agent. In a separate message, explicitly ask it to create that demo-workspace task and return its record URL. Production proposals remain demonstration-only.
-
-Expected: a **real task record**, with a returned URL you can open from the thread. Verify its title and contents in the workspace. A card or “done” sentence without an actual record is not a successful task demo. MCP tools come from the live workspace; this route is not live-account-verified by the kit's offline checks.
-
-The prompt and `propose_action` guide approval behavior but do not enforce approval around every external MCP call. Use a demo workspace. For an enforced authorization example, run the standalone [Auth0 recipe](auth0/README.md).
-
-## Browser: ambient context and approved workplace actions
+## Before recording
 
 ```bash
-pnpm dev:web
+just demo-check
 ```
 
-Open `http://localhost:3100` and select an incident. Try:
+Open the dispatcher and use **Open ledger** to place the 0xL0C1 state viewer beside it. Start with a newly generated tag.
 
-> What is happening with the selected incident? Show an incident card and a timeline.
+## Reliable two-minute flow
 
-> Propose a follow-up for this incident to investigate the retry spike. Show me the exact task before it is saved.
+1. Explain the problem: a different technician returns days later and should not need the homeowner or previous technician to reconstruct the job.
+2. Show the visible tag, room, object label, visible text, and description already filled in.
+3. Click **Record object**. Point out the real object ID and increased object count.
+4. Click **Save handoff**. Point out the lesson and claim counts and the open question.
+5. Click **Recall from Ambiguous**. Explain that this lookup sends tag + place + description and deliberately does not reuse the browser's object ID.
+6. Read the returned claim and open question. Refresh the ledger to show that the data is persisted outside the page.
+7. Name the integrations: CopilotKit provides the in-app agent experience; 0xL0C1 provides physical-object memory over MCP; Ambiguous AI is the durable event ledger; OpenRouter or OpenAI supplies the model.
 
-> Select the other incident and tell me what changed.
+## Conversational prompts
 
-Expected: `incident_card`, `timeline`, `propose_followup`, `retrieve_followup`, `refresh_followups`, and `select_incident` as appropriate. The context is derived from the displayed sample data and the Ambiguous records retrieved for the selected incident. The agent prepares a proposal; the page approval button performs the write. `propose_action` provides a separate sample approval UI but does not execute a production action. Web chat does not register Exa search; use Slack or the standalone recipes for that step.
+Replace the example tag with the tag shown on the page.
 
-### Add a persistent workplace record
+### Recall
 
-With Ambiguous AI configured, follow [the web template](../apps/web/README.md#try-the-flow): propose an exact task in your demo workspace, approve it with the page button, and open the returned record link if Ambiguous provides one. Refresh the page and retrieve the same ID.
+> I am in the upstairs bathroom looking at tag JS-123ABC. What did the previous technician learn, and what question is still open?
 
-## Record a focused video
+Expected: the agent calls `ask` and clearly labels returned claims as recalled notes.
 
-1. Show the surface and existing context.
-2. Ask a question that relies on that context.
-3. Show the native assessment and one complete action or returned research result.
-4. Open the actual record or source link.
-5. Explain what the surrounding context made possible.
+### Observe
 
-A second surface is optional. State what is sample data, what changed locally, and what reached a real service. See [SUBMISSION.md](../SUBMISSION.md) for the event checklist.
+> I am looking at a chrome quarter-turn shutoff valve beneath the upstairs bathroom sink. Its visible tag is JS-123ABC and it says “1/2 IN COLD.” Record it as the sink shutoff.
 
-Before recording, use the [four-criterion evidence checklist](../SUBMISSION.md#evidence-for-the-judging-criteria). Show your original interaction, one verified outcome, appropriate user control, and a relevant failure or cancellation case. Sponsor usage should explain how the result became possible.
+Expected: the agent calls `ask` first. If there is no match, it calls `observe`. It must not invent a room.
+
+### Commit with preview
+
+> We verified that turning it clockwise one quarter-turn isolates the sink supply. The open question is whether this branch also supplies the exterior hose bib. Prepare that handoff, but show me the preview before saving.
+
+Expected: `commit(save=false)`, followed by a preview. After the user explicitly says “Save it,” the agent calls `commit(save=true)`.
+
+## Failure recovery
+
+- If counts do not load, run `just demo-check` and inspect the 0xL0C1 terminal.
+- If recall says `no_match`, copy the exact generated tag and place from the first step.
+- If recall says `needs_confirm`, use the returned candidate's exact object ID in chat.
+- If chat fails while buttons work, check `/api/copilotkit/info` and the model-provider key.
+- If buttons fail while MCP health is green, check `/api/loci` and the Ambiguous Sheet settings owned by 0xL0C1.
+
+Inherited Slack incident and React Native finance prompts are template references, not part of the Job Site Memory submission flow.

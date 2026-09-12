@@ -157,6 +157,20 @@ If you genuinely need vitest, `--legacy-peer-deps` gets you past it — put it i
 > still tells you to install `@copilotkit/channels@0.6.1` with
 > `@copilotkit/runtime@1.65.0`. Use the versions in this repo's `package.json`.
 
-## A web follow-up does not appear after refresh
+## Job Site Memory does not load or recall
 
-Only approved Ambiguous records should survive refresh. First confirm `AMBIGUOUS_API_KEY` is set, restart `pnpm dev:web`, prepare a proposal, and click **Approve & save to Ambiguous** on the page. Then refresh and use the returned record ID or **Refresh from Ambiguous**. If the provider returns no retrievable record, the persistence check has not passed. See [the web template](../apps/web/README.md#try-the-flow).
+Run `just demo-check` first. It checks the dispatcher page, CopilotKit runtime,
+the `/api/loci` server bridge, and 0xL0C1 health independently.
+
+- Page failure: inspect the Next.js output from `just demo-web`.
+- CopilotKit failure: check the configured model-provider key and
+  `/api/copilotkit/info`.
+- LOCI bridge failure: confirm `LOCI_MCP_URL` includes the full capability path
+  ending in `/mcp`.
+- Local MCP failure: confirm `LOCI_SERVER_DIR` points to a functional 0xL0C1
+  checkout and that its Ambiguous variables are present in `.env.local`.
+- `no_match`: use the exact tag and place from the observation.
+- `needs_confirm`: select the intended candidate by object ID.
+
+The old Ambiguous workplace follow-up code remains as inherited reference code,
+but it is not rendered by the current dispatcher page.

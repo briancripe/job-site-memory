@@ -8,6 +8,9 @@ _install:
     worktree_store="${git_common_dir}/../.pnpm-worktrees/$(basename "$PWD")"
     pnpm install --frozen-lockfile --virtual-store-dir "$worktree_store"
 
+# Install the pnpm workspace from the lockfile.
+install: _install
+
 build: _install
     pnpm build
 
@@ -17,7 +20,7 @@ test: _install
 check: _install
     pnpm verify
 
-# Run 0xL0C1 locally; update LOCI_SERVER_DIR when its worktree moves.
+# Run 0xL0C1 locally; update LOCI_SERVER_DIR when its checkout moves.
 demo-loci:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -41,7 +44,7 @@ demo-web: _install
     cd apps/web
     node --env-file-if-exists=../../.env --env-file-if-exists=../../.env.local node_modules/next/dist/bin/next dev --turbopack -p 3100 -H "$demo_host"
 
-# Keep both localhost processes attached to one terminal; Ctrl-C stops both.
+# Run the complete local stack in one terminal; Ctrl-C stops both processes.
 demo:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -52,3 +55,20 @@ demo:
     loci_pid=$!
     trap 'kill "$loci_pid" 2>/dev/null || true' EXIT INT TERM
     just demo-web
+
+# Check the dispatcher, CopilotKit runtime, LOCI bridge, and MCP health.
+demo-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    set -a
+    source .env
+    source .env.local
+    set +a
+    demo_host="${DEMO_HOST:-127.0.0.1}"
+    web_url="http://${demo_host}:3100"
+    loci_origin="${LOCI_MCP_URL%%/loci-*}"
+    curl --fail --silent --show-error --output /dev/null "$web_url/"
+    curl --fail --silent --show-error --output /dev/null "$web_url/api/copilotkit/info"
+    curl --fail --silent --show-error --output /dev/null "$web_url/api/loci"
+    curl --fail --silent --show-error --output /dev/null "$loci_origin/health"
+    echo "dispatcher=$web_url loci=$loci_origin status=ready"

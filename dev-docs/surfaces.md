@@ -5,7 +5,7 @@ The starter kit now keeps the three runnable template apps together under `apps/
 | Surface | Agent and context | UI and actions | Optional capabilities | Limits |
 |---|---|---|---|---|
 | Channel (Slack / Teams / Discord) | `makeAgent`; `read_thread` plus channel context | `incident_card`, `timeline`, `propose_action` | Exa and Ambiguous MCP | Managed Channel setup required; live platform validation required |
-| Web | `makeAgent`; selected sample incident, timeline and Ambiguous follow-ups via `useAgentContext` | Incident cards, timeline, approval UI; `select_incident`, `propose_followup`, `retrieve_followup`, `refresh_followups` | Ambiguous through the server-side approval boundary | Web chat does not register Exa search or raw workplace write tools; approval server is loopback-only by default |
+| Web | `makeAgent` with the field-handoff prompt and 0xL0C1 MCP | Deterministic observe, handoff, recall controls; conversational chat; ledger counters | Ambiguous Sheet through 0xL0C1 | Text/tag/place matching; no camera pixels are sent to the server |
 | Voice (`/voice`) | Separate `RealtimeAgent`; shares system prompt | Spoken conversation and transcript | Exa via server search route | OpenAI Realtime key required regardless of chat provider; no incident workspace context, workplace MCP, or approval tools |
 | Mobile | Web runtime's `makeAgent` with a mobile prompt; finance app state through frontend tools | Expo chat, native cards, and `add_mobile_expense` approval UI | OpenAI or OpenRouter through the shared model resolver | Separate install; local sample data only; no bank, messaging, or Realtime voice integration |
 
@@ -18,7 +18,7 @@ Run these from the repository root after [setup](setup.md):
 | Surface | Command | Next step |
 |---|---|---|
 | Channel | `pnpm dev:slack` | Invite and mention the bot in a thread |
-| Web | `pnpm dev:web` | Open `http://localhost:3100` |
+| Web | `just demo` (full local stack) or `just demo-web` (existing MCP) | Open `http://localhost:3100`; run `just demo-check` separately |
 | Voice | `pnpm dev:web` | Set `OPENAI_API_KEY`, then open `http://localhost:3100/voice` and allow microphone access |
 | Mobile | Start `pnpm dev:web`, then `cd apps/mobile && npm ci && npm start` | Configure the runtime URL for your simulator or device; see [mobile setup](../apps/mobile/README.md) |
 

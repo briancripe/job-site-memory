@@ -1,84 +1,63 @@
-# An agent inside your web app
+# Job Site Memory dispatcher
 
-**OpenAI + CopilotKit React + Ambiguous AI**
+This Next.js app is the primary hackathon surface. It provides a deterministic three-step dispatcher workflow and a CopilotKit chat backed by the same 0xL0C1 MCP server.
 
-Build an agent that sees the selected record or page, helps the user act on it, and creates a workplace record that remains after a refresh. Try a customer workspace, project review page, or personal planning app. Replace the sample incident domain with your own project.
-
-[![Web app agent demo](../../assets/demos/web.gif)](../../assets/demos/web.mp4)
-
-_Ask for a follow-up, approve it, and reload to find the saved task in Ambiguous. Preview at 3× speed; click for the full MP4._
-
-## Get started
-
-Use Node.js 22+, then clone and install the kit:
+Run it from the repository root; the canonical setup is in the [root README](../../README.md#run-the-demo-locally).
 
 ```bash
-git clone https://github.com/CopilotKit/agents-everywhere-starter-kit.git
-cd agents-everywhere-starter-kit
-pnpm install
-cp .env.example .env
+just demo       # local 0xL0C1 + dispatcher
+just demo-web   # dispatcher only; use configured LOCI_MCP_URL
+just demo-check # verify live endpoints
 ```
 
-Run the commands below from the repository root. Configure root `.env` with [OpenAI](../../using-sponsor-tools.md#openai) and [Ambiguous AI](../../using-sponsor-tools.md#ambiguous-ai):
+## User flow
 
-```dotenv
-MODEL_PROVIDER=openai
-OPENAI_API_KEY=your-key
-MODEL=gpt-5.6-sol
-AMBIGUOUS_API_KEY=your-workspace-key
-```
+1. **Record object** calls `observe` and displays the provider-backed object ID.
+2. **Save handoff** calls `commit(save=true)` with one claim and an optional open question.
+3. **Recall from Ambiguous** calls `ask` using tag, place, and description. It deliberately omits the locally captured object ID so the return demonstrates persisted lookup.
+4. **Open ledger** opens 0xL0C1's read-only projected state.
 
-Choose an OpenAI model your account can use. Use a demo workspace you control for the first write. This web template needs no managed Channel or Intelligence account.
+The counters are loaded through the server-side state proxy. They are not browser-local data.
 
-For CopilotKit onboarding, use the [official prompt](../../README.md#onboarding-prompt).
+## Request paths
 
-To use OpenRouter, follow the [shared provider settings](../../using-sponsor-tools.md#openrouter): set `MODEL_PROVIDER=openrouter`, `OPENROUTER_API_KEY`, and a `MODEL` slug with tool support. Keep the Ambiguous workspace key; an OpenAI key is not required for OpenRouter chat.
+| Path | Role |
+|---|---|
+| `/` | Dispatcher controls and CopilotKit chat |
+| `/api/loci` GET | Proxy 0xL0C1 projected state for counts and ledger link |
+| `/api/loci` POST | Validate deterministic UI commands and call `observe`, `commit`, or `ask` over MCP |
+| `/api/copilotkit` | CopilotKit runtime with the field-handoff prompt and LOCI MCP tools |
+| `/api/copilotkit/info` | Runtime readiness check |
+
+## Important files
+
+| Concern | File |
+|---|---|
+| Page composition | [`src/app/page.tsx`](src/app/page.tsx) |
+| Observe / handoff / recall interface | [`src/components/loci-demo.tsx`](src/components/loci-demo.tsx) |
+| Deterministic API route | [`src/app/api/loci/route.ts`](src/app/api/loci/route.ts) |
+| MCP transport and state proxy | [`src/lib/server/loci-client.ts`](src/lib/server/loci-client.ts) |
+| CopilotKit endpoint | [`src/app/api/copilotkit/[[...path]]/route.ts`](src/app/api/copilotkit/[[...path]]/route.ts) |
+| Shared agent and prompt | [`../../packages/agent-core/src/agent.ts`](../../packages/agent-core/src/agent.ts), [`../../packages/agent-core/src/prompt.ts`](../../packages/agent-core/src/prompt.ts) |
+
+## Runtime configuration
+
+The app reads root `.env` and `.env.local`. Required variables are:
+
+- one model key: `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GOOGLE_API_KEY`;
+- `LOCI_MCP_URL`, including the 0xL0C1 capability path;
+- `DEMO_HOST` when binding beyond loopback.
+
+`AMBIGUOUS_API_KEY` and `LOCI_AMBIGUOUS_SHEET_ID` are consumed by a locally launched 0xL0C1 process. A deployed 0xL0C1 instance owns its own provider configuration.
+
+The direct Ambiguous workplace-task code under `src/lib/server/followups.ts` is inherited reference code and is not rendered by the current dispatcher page.
+
+## Verification
 
 ```bash
-pnpm dev:web
+pnpm --filter web typecheck
+pnpm --filter web test
+pnpm --filter web build
 ```
 
-Open `http://127.0.0.1:3100` or `http://localhost:3100` and select an incident. The dev and start scripts bind the credential-backed approval server to loopback by default; keep that boundary unless you add your own authentication and trusted-origin policy.
-
-## Try the flow
-
-1. Ask: “What's happening here?” Check the answer against the incident currently selected.
-2. Ask: “Create a follow-up for this incident.”
-3. Review the page proposal. Click **Approve & save to Ambiguous** only if the fields are correct. The app should return the actual record ID and any provider link.
-4. Refresh the browser. Ask the agent to retrieve the saved task by its ID from Ambiguous, or click **Refresh from Ambiguous**. Check the same record returns without creating a duplicate.
-5. Repeat with **Decline** and confirm no task is created.
-
-The result should be a retrievable Ambiguous record with the same ID after refresh. An assistant message saying it saved something is not sufficient.
-
-## Customize these files
-
-| Piece | File |
-| --- | --- |
-| App and selected record | [src/app/page.tsx](src/app/page.tsx) and [src/lib/incidents.ts](src/lib/incidents.ts) |
-| Context and frontend tools | [src/components/app-control.tsx](src/components/app-control.tsx): `useAgentContext`, `select_incident`, `propose_followup`, `retrieve_followup`, and `refresh_followups` |
-| Approval UI and provider reads | [src/components/workplace-followups.tsx](src/components/workplace-followups.tsx) and [src/lib/use-workplace.ts](src/lib/use-workplace.ts) |
-| Server approval boundary | [src/app/api/followups/route.ts](src/app/api/followups/route.ts) and [src/lib/server/followups.ts](src/lib/server/followups.ts) |
-| Ambiguous MCP adapter | [src/lib/server/workplace.ts](src/lib/server/workplace.ts), reads workspace context and saves approved tasks |
-| CopilotKit React UI | [src/components/generative-ui.tsx](src/components/generative-ui.tsx) and [src/components/providers.tsx](src/components/providers.tsx) |
-| Agent endpoint | [src/app/api/copilotkit/[[...path]]/route.ts](src/app/api/copilotkit/[[...path]]/route.ts), configured without raw workplace write tools |
-
-The web chat does not receive raw Ambiguous write tools. It can propose a task and read or refresh existing records through frontend tools; the server writes only after the user clicks **Approve & save to Ambiguous**. Tool schemas come from the MCP server at write time, and returned links must come from Ambiguous rather than being invented.
-
-## Give this to your coding agent
-
-```text
-Read the root hackathon overview, rules, sponsor guide, and AGENTS.md.
-Adapt apps/web to our user and workflow. Keep CopilotKit React for page context,
-frontend tools, agent-rendered UI, and page approval. Use Ambiguous AI for
-persistent records. Do not expose raw write tools to the web chat when the page
-approval path is required. Return the real record ID/link and verify read-back
-after refresh. Keep credentials server-side and enforce authorization at the
-write boundary. Run pnpm verify and pnpm --filter web build, then
-document the live record create/read/decline checks.
-```
-
-## Verify and limits
-
-Run `pnpm verify` and `pnpm --filter web build` for local checks. Then try the create/read/decline flow with your own workspace. Offline tests cover the approval boundary and error handling; they do not make live provider calls.
-
-[CopilotKit docs](https://docs.copilotkit.ai/) · [Sponsor authentication and first calls](../../using-sponsor-tools.md) · [Demo prompts](../../dev-docs/demo-prompts.md)
+These checks do not prove provider persistence. For that, run the demo and complete an observe → handoff → recall cycle, or use `just demo-check` for endpoint readiness.

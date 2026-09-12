@@ -5,7 +5,7 @@
 Requires Node.js 22+. From the repository root:
 
 ```bash
-pnpm install
+just install
 cp .env.example .env
 ```
 
@@ -27,11 +27,18 @@ MODEL=openai/gpt-5.6-sol
 
 Select an available model in your provider account. Restart after changing configuration. See [model switching](model-switching.md) for precedence and legacy provider prefixes.
 
+For Job Site Memory, also create `.env.local` with `LOCI_MCP_URL`. Add
+`LOCI_SERVER_DIR` and the Ambiguous Sheet settings when running 0xL0C1 locally;
+see the [root quickstart](../README.md#run-the-demo-locally).
+
 ```bash
-pnpm dev:web
+just demo       # local 0xL0C1 and dispatcher
+just demo-web   # dispatcher against an existing/deployed MCP
 ```
 
-`pnpm dev` is an alias for the web template. Open `http://127.0.0.1:3100` or `http://localhost:3100`. The web follow-up approval server is loopback-only by default because it can use local Ambiguous credentials. For the React Native template, the same command starts the mobile runtime endpoint; simulators can use the documented localhost/emulator URLs, while physical devices need a deliberate reachable host or deployment.
+Open `http://127.0.0.1:3100` or `http://localhost:3100`, then run
+`just demo-check` from another terminal. The React Native template still uses
+the web runtime endpoint but is not part of the primary dispatcher demo.
 
 ## Add Slack
 

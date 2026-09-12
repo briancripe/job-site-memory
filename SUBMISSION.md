@@ -9,24 +9,40 @@ Choose your city on the [global event page](https://aitinkerers.org/hackathons/g
 - [ ] We identify inherited templates, libraries, prompts, components, and starter code separately from our event work
 
 **What we inherited**
-<!-- Include this starter kit and any reused examples. -->
+
+CopilotKit's `agents-everywhere-starter-kit` at `5c8bf4c`, including the shared
+agent/runtime patterns and reference Slack, incident, and React Native finance
+surfaces. 0xL0C1 supplies the three-tool physical-memory MCP contract.
 
 **What we built during the hackathon**
-<!-- Describe the new core interaction and point to its implementation. Running the supplied incident demo alone does not establish a new project. -->
+
+The Job Site Memory dispatcher, field-handoff prompt, deterministic
+observe/commit/recall controls, server-side MCP bridge, read-only ledger view,
+Ambiguous Sheet persistence integration, Tailscale demo path, and operator
+recipes.
 
 ## Title and description
 
 **What you built**
-<!-- Explain the complete interaction your demo shows. -->
+
+A dispatcher where one technician records a physical object and leaves a
+lesson, then a later technician recalls the handoff by visible tag and place.
 
 **Who it is for**
-<!-- Name a person in a concrete situation. -->
+
+Trade technicians arriving at a multi-visit job after a different technician
+performed the previous diagnosis or repair.
 
 **Why the context matters**
-<!-- What did the agent know or do because it lived in this surface? -->
+
+The physical tag, room, visible text, and prior visit are the retrieval context.
+Without them, a generic chat has no reliable way to identify the exact fixture
+or recover its open question.
 
 **Sponsor technologies used**
-<!-- Name the tools you actually used and the visible contribution of each. -->
+
+CopilotKit provides the embedded agent and MCP tool loop; Ambiguous AI stores
+the durable append-only event ledger; OpenRouter supplies the chat model.
 
 ## Evidence for the judging criteria
 

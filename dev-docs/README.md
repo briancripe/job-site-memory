@@ -1,6 +1,6 @@
 # Developer resources
 
-Start with the [hackathon homepage](../README.md), choose a [template](../README.md#templates), and give your coding agent the [overview](../hackathon-overview.md), [rules](../hackathon-rules.md), and [sponsor tool guide](../using-sponsor-tools.md).
+Start with the [Job Site Memory quickstart](../README.md#run-the-demo-locally) and [current design](../docs/DESIGN.md). The remaining pages include inherited starter-kit references as well as project-specific operating notes.
 
 | Doc | When you need it |
 |---|---|
