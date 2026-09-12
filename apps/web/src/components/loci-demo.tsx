@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 type JsonObject = Record<string, unknown>;
 type LociState = {
@@ -28,12 +28,8 @@ function text(value: unknown) {
 }
 
 export function LociDemo() {
-  const generatedTag = useMemo(
-    () => `JS-${Date.now().toString(36).slice(-6).toUpperCase()}`,
-    [],
-  );
   const [place, setPlace] = useState("upstairs bathroom");
-  const [tag, setTag] = useState(generatedTag);
+  const [tag, setTag] = useState("JS-NEW");
   const [label, setLabel] = useState("sink shutoff");
   const [description, setDescription] = useState(
     "Chrome quarter-turn shutoff valve beneath the sink",
@@ -59,6 +55,7 @@ export function LociDemo() {
   }
 
   useEffect(() => {
+    setTag(`JS-${Date.now().toString(36).slice(-6).toUpperCase()}`);
     refresh().catch((error) => setError(error instanceof Error ? error.message : "Unable to load memory."));
   }, []);
 
