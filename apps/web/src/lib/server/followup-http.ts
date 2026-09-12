@@ -32,6 +32,7 @@ async function closeConnection(connection: { close(): Promise<void> }) {
 export function createFollowupHandler(options: {
   connect(): { workplace: Workplace; close(): Promise<void> } | undefined;
   directory: string;
+  trustedHosts?: readonly string[];
 }) {
   return async (request: Request) => {
     const url = new URL(request.url);
@@ -60,11 +61,15 @@ export function createFollowupHandler(options: {
       });
     // A matching arbitrary Host/Origin can be DNS rebinding against a local credential.
     // Deployment must add authenticated users and a deliberate trusted-origin allowlist.
-    if (
-      !["localhost", "127.0.0.1", "[::1]"].includes(expectedOrigin.hostname)
-    ) {
+    const trustedHosts = new Set([
+      "localhost",
+      "127.0.0.1",
+      "[::1]",
+      ...(options.trustedHosts ?? []),
+    ]);
+    if (!trustedHosts.has(expectedOrigin.hostname)) {
       return Response.json(
-        { error: "This demo accepts loopback hosts only." },
+        { error: "This demo does not trust the requested host." },
         { status: 403 },
       );
     }

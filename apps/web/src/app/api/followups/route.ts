@@ -7,6 +7,7 @@ const handler = createFollowupHandler({
   connect: () =>
     process.env.AMBIGUOUS_API_KEY?.trim() ? configuredWorkplace() : undefined,
   directory: resolve(process.env.WEB_APPROVAL_DIR || ".data/web-approvals"),
+  trustedHosts: process.env.DEMO_HOST ? [process.env.DEMO_HOST] : [],
 });
 export const GET = handler;
 export const POST = handler;

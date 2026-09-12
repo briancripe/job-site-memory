@@ -187,6 +187,21 @@ test("a loopback Host preserved by Next accepts only its matching browser Origin
   }
 });
 
+test("an explicitly trusted demo host can establish an approval session", async () => {
+  const handler = createFollowupHandler({
+    connect: () => undefined,
+    directory: "/unused",
+    trustedHosts: ["100.116.151.118"],
+  });
+  const response = await handler(
+    new Request("http://100.116.151.118:3100/api/followups?session=1", {
+      headers: { host: "100.116.151.118:3100" },
+    }),
+  );
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("set-cookie")!, /web-followup-session=/);
+});
+
 test("an attacker-controlled matching Host and Origin cannot bootstrap or call the provider", async () => {
   let connects = 0;
   const handler = createFollowupHandler({
